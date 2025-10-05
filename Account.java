@@ -43,7 +43,7 @@ public class Account {
             // Add the amount to the balance
             balance += amount;
             // Record this transaction for the mini statement
-            addTransaction("Deposited: ₱" + amount);
+            addTransaction("Deposited: PHP" + amount);
         }
     }
 
@@ -55,7 +55,7 @@ public class Account {
             // Subtract the amount from balance
             balance -= amount;
             // Record this transaction
-            addTransaction("Withdrawn: ₱" + amount);
+            addTransaction("Withdrawn: PHP" + amount);
             // Tell the program that the withdrawal worked
             return true;
         }
