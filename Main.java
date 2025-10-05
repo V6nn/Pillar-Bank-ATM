@@ -6,16 +6,16 @@ import java.util.Scanner;
 // This is the Main class – where the program starts running
 public class Main {
 
-    // We make a list that stores all bank accounts
+    //account data base
     private static ArrayList<Account> accounts = new ArrayList<>();
 
     // The main method – this is where the program starts
     public static void main(String[] args) {
 
         // Add some sample accounts (account number, pin, starting balance)
-        accounts.add(new Account("1001", 1111, 500.0));
-        accounts.add(new Account("1002", 2222, 1000.0));
-        accounts.add(new Account("1234", 3333, 100.0));
+        accounts.add(new Account("1001", 1111, 500.00));
+        accounts.add(new Account("1002", 2222, 1000.00));
+        accounts.add(new Account("1234", 3333, 100.00));
 
         // Create a Scanner so we can get input from the user
         Scanner input = new Scanner(System.in);
