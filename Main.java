@@ -15,7 +15,7 @@ public class Main {
         // Add some sample accounts (account number, pin, starting balance)
         accounts.add(new Account("1001", 1111, 500.0));
         accounts.add(new Account("1002", 2222, 1000.0));
-        accounts.add(new Account("1234", 1234, 100.0));
+        accounts.add(new Account("1234", 3333, 100.0));
 
         // Create a Scanner so we can get input from the user
         Scanner input = new Scanner(System.in);
@@ -44,32 +44,29 @@ public class Main {
             }
 
             // ======= PIN CHECK (3 tries) =======
-            int tries = 0; // counts how many times user entered wrong PIN
-            boolean loggedIn = false; // becomes true if user enters correct PIN
+            int tries = 0;
+            boolean loggedIn = false;
 
-            // Loop until correct PIN or 3 wrong tries
             while (tries < 3) {
                 int pin = (int) getValidDouble(input, "Enter PIN (3 Attempts): ");
                 if (current.checkPin(pin)) {
                     loggedIn = true;
-                    break; // stop asking for PIN
+                    break;
                 } else {
-                    tries++; // add one wrong attempt
+                    tries++;
                     System.out.println("Wrong PIN. Attempts left: " + (3 - tries));
                 }
             }
 
-            // If 3 wrong tries, end the program
             if (!loggedIn) {
                 System.out.println("PROGRAM TERMINATED (Too many wrong PIN attempts)");
                 input.close();
-                return; // exit the program
+                return;
             }
 
             // ======= USER IS NOW LOGGED IN =======
             boolean session = true;
 
-            // Loop while the user is logged in
             while (session) {
                 // Show menu options
                 System.out.println("\n====== MENU ======");
@@ -82,7 +79,6 @@ public class Main {
                 System.out.println("==================");
                 System.out.print("Select Transaction: ");
 
-                // Get user’s menu choice safely
                 int choice = (int) getValidDouble(input, "");
 
                 // ======= WITHDRAW =======
@@ -93,7 +89,7 @@ public class Main {
                     } else if (current.withdraw(amt)) {
                         System.out.println("You have successfully withdrawn PHP" + amt);
                         System.out.println("Your new balance: PHP" + current.getBalance());
-                        printReceipt("Withdrawal", amt, current);
+                        printReceipt("Withdrawal", amt, current, "");
                     } else {
                         System.out.println("Insufficient funds.");
                     }
@@ -108,7 +104,7 @@ public class Main {
                         current.deposit(amt);
                         System.out.println("You have successfully deposited PHP" + amt);
                         System.out.println("Your new balance: PHP" + current.getBalance());
-                        printReceipt("Deposit", amt, current);
+                        printReceipt("Deposit", amt, current, "");
                     }
                     if (!again(input)) { input.close(); return; }
 
@@ -116,7 +112,7 @@ public class Main {
                 } else if (choice == 3) {
                     System.out.println("Your current balance is: PHP" + current.getBalance());
                     current.addTransaction("Checked balance: PHP" + current.getBalance());
-                    printReceipt("Balance Check", 0, current);
+                    printReceipt("Balance Check", 0, current, "");
                     if (!again(input)) { input.close(); return; }
 
                 // ======= MINI STATEMENT =======
@@ -154,7 +150,7 @@ public class Main {
                     if (billAmt > 0 && current.withdraw(billAmt)) {
                         System.out.println("You have paid PHP" + billAmt + " for " + billType + ".");
                         current.addTransaction("Paid " + billType + ": -PHP" + billAmt);
-                        printReceipt("Bill Payment - " + billType, billAmt, current);
+                        printReceipt("Bill Payment", billAmt, current, billType);
                     } else {
                         System.out.println("Payment failed. Check balance or amount.");
                     }
@@ -169,10 +165,10 @@ public class Main {
                 } else {
                     System.out.println("Invalid option.");
                 }
-            } // end of session loop
-        } // end of main loop
+            }
+        }
 
-        input.close(); // close the scanner when done
+        input.close();
     }
 
     // ======= SAFELY ASK FOR A NUMBER (avoids program crash) =======
@@ -193,20 +189,28 @@ public class Main {
         System.out.print("Do you want another transaction? [Y/N]: ");
         char c = in.next().toUpperCase().charAt(0);
         if (c == 'Y') return true;
-        System.out.println("For exit – program terminated.");
+        System.out.println("Exiting. Thank you for using Pillar Bank!");
         return false;
     }
 
-    // ======= Prints a simple text receipt =======
-    private static void printReceipt(String type, double amt, Account acc) {
-        System.out.println("");
-        System.out.println("============ RECEIPT ============");
-        System.out.println("Transaction: " + type);
+    // ======= Prints a detailed text receipt =======
+    private static void printReceipt(String type, double amt, Account acc, String billType) {
+        System.out.println("\n=========== RECEIPT ===========");
+        System.out.println("Transaction Type: " + type);
+
+        if (!billType.isEmpty()) {
+            System.out.println("Bill Type: " + billType);
+        }
         if (amt > 0) {
             System.out.println("Amount: PHP" + amt);
         }
+
         System.out.println("Remaining Balance: PHP" + acc.getBalance());
-        System.out.println("=================================");
+        System.out.println("Account Number: " + acc.getAccountNumber());
+        System.out.println("Date: " + java.time.LocalDate.now());
+        System.out.println("Time: " + java.time.LocalTime.now().withNano(0));
+        System.out.println("Thank you for using Pillar Bank!");
+        System.out.println("================================\n");
     }
 
     // ======= Finds an account based on account number =======
