@@ -1,90 +1,83 @@
+// We import tools to use ArrayList and List for storing transactions
+import java.util.ArrayList;
+import java.util.List;
+
+// This is the Account class – it represents one bank account
 public class Account {
-    // Unique identifier for this account (could be numeric or alphanumeric)
-    private String accountNumber;
 
-    // Simple integer PIN used for authentication in this demo app
-    private int pin;
+    // These are variables that store the account's details
+    private String accountNumber;  // example: "1001"
+    private int pin;               // example: 1234
+    private double balance;        // example: 500.0
+    private List<String> transactions; // keeps track of recent transactions
 
-    // Account balance stored as a double for simplicity in this school project.
-    // Note: for real money handling use BigDecimal to avoid precision errors.
-    private double balance;
-    // list to hold recent transaction descriptions for the mini statement
-    private java.util.ArrayList<String> transactions = new java.util.ArrayList<>(); // note: stores newest last
-
-    // Constructor: initialize account with account number, pin, and starting balance
+    // This is the constructor – it runs when we create a new Account object
+    // Example of use: new Account("1001", 1234, 500.0);
     public Account(String accountNumber, int pin, double balance) {
-        this.accountNumber = accountNumber; // store id
-        this.pin = pin; // store pin
-        this.balance = balance; // initial balance
+        this.accountNumber = accountNumber; // store the account number
+        this.pin = pin;                     // store the account pin
+        this.balance = balance;             // store the starting balance
+        this.transactions = new ArrayList<String>(); // make an empty list for transactions
     }
 
-    // Getter for account number
+    // This checks if the PIN entered by the user is correct
+    // It returns true if the inputPin matches the real pin, otherwise false
+    public boolean checkPin(int inputPin) {
+        return pin == inputPin;
+    }
+
+    // This gives (returns) the account number of this account
     public String getAccountNumber() {
         return accountNumber;
     }
 
-    // Getter for balance. No setter is provided to enforce balance changes go
-    // through deposit/withdraw/transfer methods which contain validation.
+    // This gives (returns) the current balance of this account
     public double getBalance() {
         return balance;
     }
 
-    // Check whether the provided PIN matches this account's PIN.
-    // Returns true for a match, false otherwise. Simple equality check.
-    public boolean checkPin(int inputPin) {
-        return this.pin == inputPin;
-    }
-
-    // Deposit: only accept positive amounts. If amount > 0, add to balance.
-    // This method returns void because deposit on invalid input is a no-op.
+    // This adds money to the account
     public void deposit(double amount) {
-        if (amount > 0) { // note: only accept positive deposits
-            this.balance += amount; // note: increase account balance
-            addTransaction(String.format("Deposit: +$%.2f", amount)); // note: record transaction
+        // Only allow positive numbers
+        if (amount > 0) {
+            // Add the amount to the balance
+            balance += amount;
+            // Record this transaction for the mini statement
+            addTransaction("Deposited: ₱" + amount);
         }
     }
 
-    // Withdraw: only allow positive amounts up to the available balance.
-    // If successful, deduct from balance and return true; otherwise return false.
+    // This takes money from the account (withdraw)
+    // It returns true if successful, false if not enough balance
     public boolean withdraw(double amount) {
-        if (amount > 0 && amount <= this.balance) { // note: validate amount
-            this.balance -= amount; // note: deduct from balance
-            addTransaction(String.format("Withdrawal: -$%.2f", amount)); // note: record transaction
-            return true; // note: success
+        // Only allow positive numbers and make sure there’s enough money
+        if (amount > 0 && amount <= balance) {
+            // Subtract the amount from balance
+            balance -= amount;
+            // Record this transaction
+            addTransaction("Withdrawn: ₱" + amount);
+            // Tell the program that the withdrawal worked
+            return true;
         }
-        return false; // note: failure (invalid amount or insufficient funds)
+        // If the amount is invalid or balance is not enough
+        return false;
     }
 
-    // Transfer funds from this account to another Account instance.
-    // Returns true on success, false on failure. Conditions checked:
-    // - target is not null
-    // - amount is positive
-    // - this account has enough balance
-    // If all pass, deduct amount here and credit target by calling deposit.
-    public boolean transferTo(Account target, double amount) {
-        if (target == null) return false; // note: cannot transfer to null
-        if (amount > 0 && amount <= this.balance) { // note: validate amount and funds
-            this.balance -= amount; // note: deduct from sender
-            addTransaction(String.format("Transfer Out: -$%.2f to %s", amount, target.getAccountNumber())); // note: record outgoing transfer
-            // credit the target account using deposit (which also records the incoming transaction)
-            target.deposit(amount); // note: this will record a Deposit transaction on the target
-            target.addTransaction(String.format("Transfer In: +$%.2f from %s", amount, this.getAccountNumber())); // note: explicit incoming transaction (optional duplicate)
-            return true; // note: success
-        }
-        return false; // note: failure
-    }
+    // This adds a line to the transaction list
+    // It also removes the oldest one if there are more than 5
+    public void addTransaction(String info) {
+        // Add the new transaction at the end
+        transactions.add(info);
 
-    // add a transaction description to the list and trim to last 5 entries
-    public void addTransaction(String desc) {
-        transactions.add(desc); // note: append newest at end
-        // if we have more than 5 entries, remove the oldest (index 0)
+        // Keep only the last 5 transactions
         if (transactions.size() > 5) {
-            transactions.remove(0); // note: keep only last 5
+            // Remove the oldest (first) transaction
+            transactions.remove(0);
         }
     }
 
-    // return a copy of recent transactions (last up to 5 entries)
-    public java.util.List<String> getMiniStatement() {
-        return new java.util.ArrayList<>(transactions); // note: return defensive copy
+    // This returns the list of transactions (for the mini statement)
+    public List<String> getMiniStatement() {
+        return transactions;
     }
 }

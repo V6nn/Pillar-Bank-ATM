@@ -1,215 +1,208 @@
+// We import tools we need
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
+// This is the Main class – where the program starts running
 public class Main {
+
+    // We make a list that stores all bank accounts
     private static ArrayList<Account> accounts = new ArrayList<>();
 
+    // The main method – this is where the program starts
     public static void main(String[] args) {
-        // Seed some accounts
+
+        // Add some sample accounts (account number, pin, starting balance)
         accounts.add(new Account("1001", 1111, 500.0));
         accounts.add(new Account("1002", 2222, 1000.0));
         accounts.add(new Account("1234", 1234, 100.0));
 
+        // Create a Scanner so we can get input from the user
         Scanner input = new Scanner(System.in);
 
+        // Welcome message
         System.out.println("Welcome to Pillar Bank ATM");
 
+        // Start the main loop (runs until user types "exit")
         while (true) {
             System.out.print("Enter Account Number (or type exit): ");
             String accNo = input.next();
+
+            // If the user types "exit", the program ends
             if (accNo.equalsIgnoreCase("exit")) {
                 System.out.println("Thank you for using Pillar Bank!");
                 break;
             }
 
+            // Try to find the account the user entered
             Account current = findAccount(accNo);
+
+            // If the account does not exist, show error and restart
             if (current == null) {
                 System.out.println("Account not found. Try again.");
-                continue;
+                continue; // go back to the top of the while loop
             }
 
-            // warn the user that they have only 3 attempts for the PIN
-            System.out.println("You have 3 attempts to enter your PIN."); // note: inform user about attempt limit
-            int attempts = 0; // note: counter for PIN attempts
-            boolean authenticated = false; // note: track successful PIN entry
-            while (attempts < 3) {
-                System.out.print("Enter PIN: ");
-                int pin = input.nextInt(); // note: read user PIN
-                attempts++; // note: increment attempt count
-                if (current.checkPin(pin)) { // note: check PIN against stored pin
-                    authenticated = true; // note: successful authentication
-                    break;
+            // ======= PIN CHECK (3 tries) =======
+            int tries = 0; // counts how many times user entered wrong PIN
+            boolean loggedIn = false; // becomes true if user enters correct PIN
+
+            // Loop until correct PIN or 3 wrong tries
+            while (tries < 3) {
+                System.out.print("Enter PIN (3 Attempts): ");
+                int pin = input.nextInt();
+
+                // Check if PIN is correct
+                if (current.checkPin(pin)) {
+                    loggedIn = true;
+                    break; // stop asking for PIN
                 } else {
-                    int remaining = 3 - attempts; // note: calculate remaining attempts
-                    if (remaining > 0) {
-                        System.out.println("Incorrect PIN. Attempts remaining: " + remaining); // note: warn user
-                    }
+                    tries++; // add one wrong attempt
+                    System.out.println("Wrong PIN. Attempts left: " + (3 - tries));
                 }
             }
-            if (!authenticated) {
-                // note: after 3 failed attempts, program terminates as required
-                System.out.println("Invalid Transaction (PROGRAM TERMINATE)");
+
+            // If 3 wrong tries, end the program
+            if (!loggedIn) {
+                System.out.println("PROGRAM TERMINATED (Too many wrong PIN attempts)");
                 input.close();
-                return; // note: exit program immediately
+                return; // exit the program
             }
 
-            // Logged in
-            System.out.println("Login successful.");
+            // ======= USER IS NOW LOGGED IN =======
             boolean session = true;
+
+            // Loop while the user is logged in
             while (session) {
-                System.out.println("======= Pillar Bank ATM =======");
-                System.out.println("\n--- Menu ---");
-                System.out.println("[1] Withdrawal");
+                // Show menu options
+                System.out.println("====== MENU ======");
+                System.out.println("[1] Withdraw");
                 System.out.println("[2] Deposit");
                 System.out.println("[3] Balance");
-                System.out.println("[4] Send Money");
-                System.out.println("[5] Bills Payment");
-                System.out.println("[6] Mini Statement"); // note: new menu option to view last 5 transactions
-                System.out.println("[7] Logout");
-                System.out.print("Choose an option: ");
+                System.out.println("[4] Mini Statement");
+                System.out.println("[5] Logout");
+                System.out.println("==================");
+                System.out.print("Select Transaction: ");
+
+                // Get user’s menu choice
                 int choice = input.nextInt();
 
-                switch (choice) {
-                    case 1:
-                        // Withdrawal: show rule that withdrawals must be divisible by 100
-                        System.out.printf("Balance: $%.2f\n", current.getBalance());
-                        System.out.println("Note: Withdrawals allowed only in multiples of 100."); // note: display rule
-                        System.out.print("Enter amount to withdraw: ");
-                        double w = input.nextDouble();
-                        // check divisibility by 100
-                        if (((int)w) % 100 != 0) { // note: casting to int removes decimal part for divisibility check
-                            System.out.println("Withdrawal amount must be divisible by 100. Transaction cancelled.");
-                            break;
-                        }
-                        if (current.withdraw(w)) {
-                            System.out.println("Please take your cash.");
-                        } else {
-                            System.out.println("Insufficient funds or invalid amount.");
-                        }
-                        break;
-                    case 2:
-                        System.out.print("Enter amount to deposit: ");
-                        double dep = input.nextDouble();
-                        if (dep <= 0) {
-                            System.out.println("Amount must be positive.");
-                        } else {
-                            current.deposit(dep); // note: deposit will record transaction via Account.addTransaction
-                            System.out.println("Deposit successful.");
-                        }
-                        break;
-                    case 3:
-                        // Balance check
-                        System.out.printf("Current balance: $%.2f\n", current.getBalance());
-                        break;
-                    case 4:
-                        // Send Money (transfer) - records transactions via Account methods
-                        System.out.print("Enter target account number: ");
-                        String targetAcc = input.next();
-                        Account target = findAccount(targetAcc);
-                        if (target == null) {
-                            System.out.println("Target account not found.");
-                            break;
-                        }
-                        System.out.print("Enter amount to transfer: ");
-                        double tAmt = input.nextDouble();
-                        if (current.transferTo(target, tAmt)) {
-                            System.out.println("Transfer successful.");
-                        } else {
-                            System.out.println("Transfer failed (insufficient funds or invalid amount).");
-                        }
-                        break;
-                    case 5:
-                        // Bills Payment menu
-                        // We show a submenu of common billers and let the user pick one,
-                        // enter an account/reference number for that biller, and the amount.
-                        // If the current account has enough balance, we deduct the amount
-                        // and consider the bill 'paid'. This is a simple simulation.
-                        boolean paying = true;
-                        while (paying) {
-                            System.out.println("\n--- Bills Payment ---");
-                            System.out.println("[1] Meralco");
-                            System.out.println("[2] Converge");
-                            System.out.println("[3] PLDT");
-                            System.out.println("[4] Maynilad");
-                            System.out.println("[5] Back to main menu");
-                            System.out.print("Choose a biller: ");
-                            int billChoice = input.nextInt();
+                // ======= WITHDRAW =======
+                if (choice == 1) {
+                    System.out.print("Enter amount: ");
+                    double amt = input.nextDouble();
 
-                            if (billChoice == 5) {
-                                paying = false; // exit bills menu and return to main menu
-                                break;
-                            }
+                    // Check if amount is valid (must be multiple of 100)
+                    if (amt % 100 != 0) {
+                        System.out.println("Amount must be a multiple of 100.");
+                    } else if (current.withdraw(amt)) {
+                        // If withdrawal is successful
+                        System.out.println("You have successfully withdrawn ₱" + amt);
+                        System.out.println("Your new balance: ₱" + current.getBalance());
+                        printReceipt("Withdraw", amt, current);
+                    } else {
+                        System.out.println("Insufficient funds.");
+                    }
 
-                            // Map numeric choice to a biller name string for display/logging
-                            String biller;
-                            switch (billChoice) {
-                                case 1: biller = "Meralco"; break;
-                                case 2: biller = "Converge"; break;
-                                case 3: biller = "PLDT"; break;
-                                case 4: biller = "Maynilad"; break;
-                                default:
-                                    System.out.println("Invalid biller selection.");
-                                    continue; // re-show bills menu
-                            }
+                    // Ask if user wants to do another transaction
+                    if (!again(input)) {
+                        input.close();
+                        return;
+                    }
 
-                            // Ask user for the bill reference (like account or reference number)
-                            System.out.print("Enter bill account/reference number: ");
-                            String billRef = input.next();
+                // ======= DEPOSIT =======
+                } else if (choice == 2) {
+                    System.out.print("Enter amount: ");
+                    double amt = input.nextDouble();
 
-                            // Ask user how much to pay for this bill
-                            System.out.print("Enter amount to pay: ");
-                            double billAmount = input.nextDouble();
+                    if (amt <= 0) {
+                        System.out.println("Invalid amount.");
+                    } else {
+                        current.deposit(amt);
+                        System.out.println("You have successfully deposited ₱" + amt);
+                        System.out.println("Your new balance: ₱" + current.getBalance());
+                        printReceipt("Deposit", amt, current);
+                    }
 
-                            // Validate amount > 0
-                            if (billAmount <= 0) {
-                                System.out.println("Amount must be positive. Try again.");
-                                continue; // back to bills menu
-                            }
+                    if (!again(input)) {
+                        input.close();
+                        return;
+                    }
 
-                            // Attempt to withdraw from the current account to simulate payment
-                            if (current.withdraw(billAmount)) {
-                                // Payment successful: in a real system we'd record the transaction
-                                // and notify the biller. Here we just print a confirmation message.
-                                System.out.printf("Paid $%.2f to %s (Ref: %s).\n", billAmount, biller, billRef);
-                                System.out.printf("New balance: $%.2f\n", current.getBalance());
-                            } else {
-                                // Withdrawal failed: insufficient funds or invalid amount
-                                System.out.println("Payment failed: insufficient funds or invalid amount.");
-                            }
+                // ======= BALANCE =======
+                } else if (choice == 3) {
+                    System.out.println("Your current balance is: ₱" + current.getBalance());
+                    current.addTransaction("Checked balance: ₱" + current.getBalance());
+                    printReceipt("Balance Check", 0, current);
 
-                            // After a payment we loop back to the bills menu so user can pay another bill
+                    if (!again(input)) {
+                        input.close();
+                        return;
+                    }
+
+                // ======= MINI STATEMENT =======
+                } else if (choice == 4) {
+                    System.out.println("====== Mini Statement ======");
+                    List<String> mini = current.getMiniStatement();
+
+                    if (mini.isEmpty()) {
+                        System.out.println("No recent transactions.");
+                    } else {
+                        for (String t : mini) {
+                            System.out.println(t);
                         }
-                        break;
-                    case 6:
-                        // Mini Statement: display the last up to 5 transactions
-                        System.out.println("\n--- Mini Statement (last up to 5 entries) ---");
-                        java.util.List<String> stm = current.getMiniStatement(); // note: retrieve recent transactions
-                        if (stm.isEmpty()) {
-                            System.out.println("No recent transactions.");
-                        } else {
-                            for (String s : stm) {
-                                System.out.println(s); // note: print each transaction line
-                            }
-                        }
-                        System.out.println("-------------------------------------------");
-                        break;
-                    case 7:
-                        session = false;
-                        System.out.println("Logged out.");
-                        break;
-                    default:
-                        System.out.println("Invalid option.");
+                    }
+
+                    System.out.println("============================");
+
+                // ======= LOGOUT =======
+                } else if (choice == 5) {
+                    System.out.println("Logged out.");
+                    session = false;
+
+                // ======= INVALID CHOICE =======
+                } else {
+                    System.out.println("Invalid option.");
                 }
-            }
-        }
+            } // end of session loop
+        } // end of main loop
 
-        input.close();
+        input.close(); // close the scanner when done
     }
 
-    private static Account findAccount(String accountNumber) {
-        for (Account a : accounts) {
-            if (a.getAccountNumber().equals(accountNumber)) return a;
+    // ======= Helper Methods Below =======
+
+    // This method asks the user if they want another transaction
+    private static boolean again(Scanner in) {
+        System.out.print("Do you want another transaction? [Y/N]: ");
+        char c = in.next().toUpperCase().charAt(0); // read the first letter of input
+        if (c == 'Y') return true; // if yes, return true
+        System.out.println("For exit – program terminated.");
+        return false; // otherwise return false
+    }
+
+    // This prints a simple text receipt
+    private static void printReceipt(String type, double amt, Account acc) {
+        System.out.println("=== RECEIPT ===");
+        System.out.println("Transaction: " + type);
+        if (amt > 0) {
+            System.out.println("Amount: ₱" + amt);
         }
-        return null;
+        System.out.println("Balance: ₱" + acc.getBalance());
+        System.out.println("Recent Transactions:");
+        for (String t : acc.getMiniStatement()) {
+            System.out.println(" - " + t);
+        }
+        System.out.println("===============");
+    }
+
+    // This finds an account based on account number
+    private static Account findAccount(String num) {
+        for (Account a : accounts) {
+            if (a.getAccountNumber().equals(num)) {
+                return a; // return the account if found
+            }
+        }
+        return null; // return null if not found
     }
 }
