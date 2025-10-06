@@ -254,8 +254,8 @@ public class Main {
     // Loops through the ArrayList and finds an account that matches the entered account number.
     // Returns the Account object if found, otherwise returns null.
     private static Account findAccount(String num) {
-        for (Account a : accounts) { // loop through all accounts
-            if (a.getAccountNumber().equals(num)) { // check if the account number matches
+        for (Account a : accounts) { // "for-each loop" checks every Account object (a) in (:) the accounts list // "a" is just a placeholder
+            if (a.getAccountNumber().equals(num)) { // check if the current account numbers matches the one entered by the user
                 return a; // return the found account
             }
         }
