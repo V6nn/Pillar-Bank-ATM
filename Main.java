@@ -18,7 +18,8 @@ public class Main {
 
     public static void main(String[] args) {
 
-        // accounts (AccountNumber, PIN, StartingBalance)
+        // account data base 
+        // format:(AccountNumber, PIN, StartingBalance)
         accounts.add(new Account("1001", 1111, 500.00));
         accounts.add(new Account("1002", 2222, 1000.00));
         accounts.add(new Account("1234", 3333, 100.00));
