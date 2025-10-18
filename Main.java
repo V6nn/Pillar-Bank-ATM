@@ -1,11 +1,3 @@
-// Features:
-//  Multiple accounts
-//  Login with Account Number and PIN
-//  Withdraw / Deposit / Check Balance
-//  View Mini Statement (recent transactions)
-//  Pay Bills (Electricity, Water, WiFi)
-//  Proper input validation
-
 import java.util.ArrayList;  // To store multiple accounts in a list
 import java.util.List;       // Used for mini statement transactions
 import java.util.Scanner;    // To get user input
@@ -28,7 +20,6 @@ public class Main {
         System.out.println("Welcome to Pillar Bank ATM");
 
         // === MAIN ATM LOOP ===
-        // while loop so it keeps the program running until the user types "exit"
         while (true) {
             System.out.print("Enter Account Number (or type exit): ");
             String accNo = input.next();
@@ -36,7 +27,7 @@ public class Main {
             // Exit ATM logic
             if (accNo.equalsIgnoreCase("exit")) {
                 System.out.println("Thank you for using Pillar Bank!");
-                break; // stops the main loop
+                break;
             }
 
             // Find user input account in array list
@@ -45,39 +36,33 @@ public class Main {
             // If account not found, show error and restart
             if (current == null) {
                 System.out.println("Account not found. Try again.");
-                continue; // restart the loop
+                continue;
             }
 
             // === PIN CHECK Logic (3 attempts allowed) ===
             int tries = 0;
             boolean loggedIn = false;
 
-            // A loop that runs up to 3 times for PIN checking
-            while (tries < 3) { //tries greater than 3
-                // We use getValidDouble() method to safely handle wrong input (like letters)
+            while (tries < 3) {
                 int pin = (int) getValidDouble(input, "Enter PIN (3 Attempts): ");
-
-                // checkPin() method from the Account class — compares input PIN to stored one
                 if (current.checkPin(pin)) {
                     loggedIn = true;
-                    break; // correct PIN entered
+                    break;
                 } else {
-                    tries++; //increment tries by 1
-                    System.out.println("Wrong PIN. Attempts left: " + (3 - tries)); //if tries = 1 then (3 - 1)
+                    tries++;
+                    System.out.println("Wrong PIN. Attempts left: " + (3 - tries));
                 }
             }
 
-            // If user fails all 3 attempts → exit program
             if (!loggedIn) {
                 System.out.println("PROGRAM TERMINATED (Too many wrong PIN attempts)");
                 input.close();
-                return; // Terminates the program
+                return;
             }
 
             // === USER IS LOGGED IN ===
-            boolean session = true; // keeps the user session active
+            boolean session = true;
             while (session) {
-                // Display the main menu
                 System.out.println("\n====== MENU ======");
                 System.out.println("[1] Withdrawal");
                 System.out.println("[2] Deposit");
@@ -88,40 +73,38 @@ public class Main {
                 System.out.println("==================");
                 System.out.print("Select Transaction: ");
 
-                //getValidDouble is the method to safe check input
-                int choice = (int) getValidDouble(input, ""); 
+                int choice = (int) getValidDouble(input, "");
+                input.nextLine(); 
 
-                // === SWITCH CASE handles user’s transaction choice ===
                 switch (choice) {
                     case 1: // ===== WITHDRAW =====
                         double withdrawAmt = getValidDouble(input, "Enter amount (Must be divisible by 100): ");
+                        input.nextLine(); 
 
-                        // % (modulus) checks if number is divisible by 100
                         if (withdrawAmt % 100 != 0) {
                             System.out.println("Amount must be a multiple of 100.");
-                        }
-                        // withdraw() returns true if successful, false if not enough balance
-                        else if (current.withdraw(withdrawAmt)) { //remove Withdraw Amount from Balance
+                        } else if (current.withdraw(withdrawAmt)) {
                             System.out.println("You have successfully withdrawn PHP" + withdrawAmt);
                             System.out.println("Your new balance: PHP" + current.getBalance());
-                            printReceipt("Withdrawal", withdrawAmt, current, "");
+                            printReceipt("Withdrawal", -withdrawAmt, current, "");
                         } else {
                             System.out.println("Insufficient funds.");
                         }
 
-                        // Ask if user wants another transaction
                         if (!again(input)) { input.close(); return; }
                         break;
 
                     case 2: // ===== DEPOSIT =====
                         double depositAmt = getValidDouble(input, "Enter amount: ");
+                        input.nextLine(); 
+
                         if (depositAmt <= 0) {
                             System.out.println("Invalid amount.");
                         } else {
-                            current.deposit(depositAmt); //deposit() updates balance
+                            current.deposit(depositAmt);
                             System.out.println("You have successfully deposited PHP" + depositAmt);
                             System.out.println("Your new balance: PHP" + current.getBalance());
-                            printReceipt("Deposit", depositAmt, current, "");
+                            printReceipt("Deposit", +depositAmt, current, "");
                         }
                         if (!again(input)) { input.close(); return; }
                         break;
@@ -135,13 +118,11 @@ public class Main {
 
                     case 4: // ===== MINI STATEMENT =====
                         System.out.println("====== Mini Statement ======");
-                        List<String> mini = current.getMiniStatement(); // Returns a list of saved transactions
+                        List<String> mini = current.getMiniStatement();
 
-                        // If no transactions recorded, show message
                         if (mini.isEmpty()) {
                             System.out.println("No recent transactions.");
                         } else {
-                            // Loop through each transaction and print it
                             for (String line : mini) {
                                 System.out.println(line);
                             }
@@ -151,115 +132,129 @@ public class Main {
                         break;
 
                     case 5: // ===== PAY BILLS =====
-                        System.out.println("Select Bill Type:");
-                        System.out.println("[1] Electricity");
-                        System.out.println("[2] Water");
-                        System.out.println("[3] WiFi");
+                        while (true) {
+                            System.out.println("Select Bill Type:");
+                            System.out.println("[1] Electricity");
+                            System.out.println("[2] Water");
+                            System.out.println("[3] WiFi");
+                            System.out.println("[4] Back to Menu");
 
-                        int billChoice = (int) getValidDouble(input, "Enter your choice: ");
+                            int billChoice = (int) getValidDouble(input, "Enter your choice: ");
+                            input.nextLine(); 
 
-                        // Switch expression (modern Java feature) — assigns string based on choice
-                        String billType = switch (billChoice) {
-                            case 1 -> "Electricity";
-                            case 2 -> "Water";
-                            case 3 -> "WiFi";
-                            default -> "";
-                        };
+                            if (billChoice == 4) break; // Back to menu
 
-                        if (billType.isEmpty()) {
-                            System.out.println("Invalid bill type.");
-                            break;
+                            String billType = switch (billChoice) {
+                                case 1 -> "Electricity";
+                                case 2 -> "Water";
+                                case 3 -> "WiFi";
+                                default -> "";
+                            };
+
+                            if (billType.isEmpty()) {
+                                System.out.println("Invalid bill type.");
+                                continue;
+                            }
+
+                            String confirmAcc = getValidString(input, "Enter Account Number to confirm payment: ");
+                            if (!confirmAcc.equals(current.getAccountNumber())) {
+                                System.out.println("Account number mismatch. Cancelling transaction.");
+                                continue;
+                            }
+
+                            double billAmt = getValidDouble(input, "Enter amount to pay for " + billType + ": ");
+                            input.nextLine(); 
+
+                            if (current.payBill(billType, billAmt)) {
+                                System.out.println("You have paid PHP" + billAmt + " for " + billType + ".");
+                                printReceipt("Bill Payment", -billAmt, current, billType);
+                            } else {
+                                System.out.println("Payment failed. Check balance or amount.");
+                            }
+
+                            if (!again(input)) { input.close(); return; }
                         }
-
-                        double billAmt = getValidDouble(input, "Enter amount to pay for " + billType + ": ");
-
-                        // Withdraws or deducts money for bill if balance is enough
-                        if (billAmt > 0 && current.withdraw(billAmt)) { //&& Checks if one value is false, then go to else statement
-                            System.out.println("You have paid PHP" + billAmt + " for " + billType + ".");
-                            current.addTransaction("Paid " + billType + ": -PHP" + billAmt);
-                            printReceipt("Bill Payment", billAmt, current, billType);
-                        } else {
-                            System.out.println("Payment failed. Check balance or amount.");
-                        }
-
-                        if (!again(input)) { input.close(); return; }
                         break;
 
                     case 6: // ===== LOGOUT =====
                         System.out.println("Logged out.");
-                        session = false; // Ends user session
+                        session = false;
                         break;
 
-                    default: // ===== INVALID CHOICE =====
+                    default:
                         System.out.println("Invalid option. Please try again.");
                         break;
-                } // end switch
-            } // end session loop
-        } // end main loop
+                }
+            }
+        }
 
-        input.close(); // closes scanner 
+        input.close();
     }
 
-    // ==============
-    // HELPER METHODS 
-    // ==============
+    // =====================
+    // HELPER METHODS
+    // =====================
 
-    // getValidDouble():
-    // Prevents program crash if user types letters instead of numbers.
-    // Loops until user enters a valid number.
+    // getValidDouble(): ensures user inputs valid numbers
     private static double getValidDouble(Scanner input, String message) {
         while (true) {
             if (!message.isEmpty()) System.out.print(message);
             if (input.hasNextDouble()) {
-                return input.nextDouble(); // valid number
+                return input.nextDouble();
             } else {
                 System.out.println("Invalid input. Please enter a number.");
-                input.next(); // clears invalid entry
+                input.next();
             }
         }
     }
 
-    // again():
-    // Asks user if they want to do another transaction.
-    // Returns true for Y, false for N.
+    // getValidString(): prevents blank or space-only input
+    private static String getValidString(Scanner input, String message) {
+        while (true) {
+            System.out.print(message);
+            String line = input.nextLine().trim();
+            if (!line.isEmpty()) {
+                return line;
+            }
+            System.out.println("Error: Input cannot be blank or space.");
+        }
+    }
+
+    // again(): ask if user wants another transaction
     private static boolean again(Scanner in) {
         System.out.print("Do you want another transaction? [Y/N]: ");
-        char c = in.next().toUpperCase().charAt(0); // Parsing and start at index 0
-        if (c == 'Y') return true; //If user input is Y return True otherwise return False which means Exit
+        char c = in.next().toUpperCase().charAt(0);
+        in.nextLine(); 
+        if (c == 'Y') return true;
         System.out.println("Exiting. Thank you for using Pillar Bank!");
         return false;
     }
 
-    // printReceipt():
-    // Prints the transaction details for the user.
+    // printReceipt(): prints receipt info
     private static void printReceipt(String type, double amt, Account acc, String billType) {
         System.out.println("\n=========== RECEIPT ===========");
         System.out.println("Transaction Type: " + type);
-
-        if (!billType.isEmpty()) { // Only prints if billType is not empty
+        if (!billType.isEmpty()) {
             System.out.println("Bill Type: " + billType);
         }
-        if (amt > 0) { // Shows how much money was involved in the transaction
-            System.out.println("Amount: PHP" + amt);
+        if (amt != 0) {
+            System.out.println("Amount: " + (amt > 0 ? "+" : "") + "PHP" + amt);
         }
-
-        System.out.println("Remaining Balance: PHP" + acc.getBalance()); // Show user updated balance
-        System.out.println("Account Number: " + acc.getAccountNumber()); //Show Account Number
-        System.out.println("Date: " + java.time.LocalDate.now()); // Show Current Date
-        System.out.println("Time: " + java.time.LocalTime.now().withNano(0)); // Show Current Time WITHOUT milliseconds
+        System.out.println("Remaining Balance: PHP" + acc.getBalance());
+        System.out.println("Account Number: " + acc.getAccountNumber());
+        System.out.println("Date: " + java.time.LocalDate.now());
+        System.out.println("Time: " + java.time.LocalTime.now().withNano(0));
         System.out.println("Thank you for using Pillar Bank!");
         System.out.println("================================\n");
     }
 
-    // findAccount():
-    // Loops through the ArrayList and finds an account that matches the entered account number.
-    // Returns the Account object if found, otherwise returns null.
+    // findAccount(): search account in list
     private static Account findAccount(String num) {
-        for (Account a : accounts) { // "for-each loop" checks every Account object (a) in (:) the accounts list // "a" is just a placeholder
-            if (a.getAccountNumber().equals(num)) { // check if the current account numbers matches the one entered by the user
-                return a; // return the found account
+        for (Account a : accounts) {
+            if (a.getAccountNumber().equals(num)) {
+                return a;
             }
         }
-        return null; // if not found, return null (no match)
+        return null;
     }
 }

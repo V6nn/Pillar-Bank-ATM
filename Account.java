@@ -1,6 +1,8 @@
 // ArrayList and List for storing transactions
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 // Account class – it represents one bank account
 public class Account {
@@ -21,7 +23,6 @@ public class Account {
     }
 
     // Checks if the PIN entered is correct
-    // It returns true if the inputPin matches the real pin, otherwise false
     public boolean checkPin(int inputPin) {
         return pin == inputPin;
     }
@@ -38,40 +39,41 @@ public class Account {
 
     // Adds money to the account
     public void deposit(double amount) {
-        // Only allow positive numbers
         if (amount > 0) {
-            // Add the deposit amount to the balance
-            balance += amount;
-            // Record this transaction for the mini statement
-            addTransaction("Deposited: PHP" + amount);
+            balance += amount; // Add the deposit amount to the balance
+            addTransaction("Deposit: +PHP" + amount); // Record with + sign
         }
     }
 
     // Withdraw from Account
-    // It returns true if successful, false if not enough balance
+    // Returns true if successful, false if not enough balance
     public boolean withdraw(double amount) {
-        // Only allow positive numbers and make sure there’s enough money
-        if (amount > 0 && amount <= balance) { // && checks if input is less than or equal to current balance
-            // Subtract the amount from balance
+        if (amount > 0 && amount <= balance) {
             balance -= amount;
-            // Record this transaction
-            addTransaction("Withdrawn: PHP" + amount);
-            // Withdrawal worked
+            addTransaction("Withdrawal: -PHP" + amount); // Record with - sign
             return true;
         }
-        // If the amount is invalid or balance is not enough
         return false;
     }
 
-    // This adds a line to the transaction list
-    // It also removes the oldest one if there are more than 5
+    // New method: For bill payments (uses -PHP format, no "Withdrawal" label)
+    public boolean payBill(String billType, double amount) {
+        if (amount > 0 && amount <= balance) {
+            balance -= amount;
+            addTransaction("Paid " + billType + ": -PHP" + amount); // Clear and formatted
+            return true;
+        }
+        return false;
+    }
+
+    // Adds a line to the transaction list (with timestamp)
     public void addTransaction(String info) {
-        // Add the new transaction at the end
-        transactions.add(info);
+        // Add date and time for better record accuracy
+        String timestamp = LocalDate.now() + " " + LocalTime.now().withNano(0);
+        transactions.add(info + " | " + timestamp);
 
         // Keep only the last 5 transactions
         if (transactions.size() > 5) {
-            // Remove the oldest (first) transaction
             transactions.remove(0);
         }
     }
